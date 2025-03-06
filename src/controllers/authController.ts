@@ -4,11 +4,9 @@ import { matchedData, validationResult } from "express-validator";
 import user from "../models/user";
 import { createToken } from "../utils/jwt";
 import { successResponse, errorResponse, ApiResponse } from "../utils/response";
+import { AuthRequest } from "../middlewares/authMiddleWare";
 
-export const register = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const register = async (req: Request, res: Response): Promise<void> => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     res.status(400).json({ errors: errors.array() });
@@ -18,16 +16,16 @@ export const register = async (
 
   try {
     const existingUser = await user.findOne({ email });
-    if (existingUser)
-    res.status(400).json({ message: "User already exists" });
+    if (existingUser) res.status(400).json({ message: "User already exists" });
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = new user({ name, email, password: hashedPassword });
 
     await newUser.save();
-    const response: ApiResponse<{ name: string; email: string }> =
+    const response: ApiResponse<{ id: string; name: string; email: string }> =
       successResponse(
         {
+          id: newUser._id as string,
           name: newUser.name,
           email: newUser.email,
         },
@@ -44,13 +42,10 @@ export const register = async (
   }
 };
 
-export const login = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const login = async (req: Request, res: Response): Promise<void> => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-     res.status(400).json({ errors: errors.array() });
+    res.status(400).json({ errors: errors.array() });
   }
 
   const { email, password } = matchedData(req);
@@ -71,7 +66,7 @@ export const login = async (
         "Invalid password",
         400
       );
-       res.status(400).json(response);
+      res.status(400).json(response);
     }
 
     const token = createToken(existingUser._id as string);
@@ -80,38 +75,80 @@ export const login = async (
       "Login successful",
       200
     );
-     res.status(200).json(response);
+    res.status(200).json(response);
   } catch (error) {
     const response: ApiResponse<null> = errorResponse(
       "Internal server error",
       500
     );
-     res.status(500).json(response);
+    res.status(500).json(response);
   }
 };
 
-// get user profile
 export const profile = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
-  const user = req.user;
-   res.status(200).json({ user });
-};
-
-// get all users
-export const getUsers = async (
-  req: Request,
+  req: AuthRequest,
   res: Response
 ): Promise<void> => {
   try {
-    const users = await user.find();
-     res.status(200).json({ users });
+    if (!req.user || typeof req.user !== "object") {
+      const response: ApiResponse<null> = errorResponse(
+        "Unauthorized, user not found",
+        401
+      );
+      res.status(401).json(response);
+    }
+
+    const { userId } = req.user as { userId: string };
+
+    const u = await user.findById(userId).select("-password");
+
+    if (!u) {
+      const response: ApiResponse<null> = errorResponse(
+        "Unauthorized, user not found",
+        401
+      );
+      res.status(401).json(response);
+    }
+
+    if (!u) {
+      const response: ApiResponse<null> = errorResponse(
+        "Unauthorized, user not found",
+        401
+      );
+      res.status(401).json(response);
+      return;
+    }
+
+    const response: ApiResponse<typeof u> = successResponse(
+      u,
+      "User profile retrieved successfully",
+      200
+    );
+    res.status(200).json(response);
+  } catch (error: any) {
+    const response: ApiResponse<null> = errorResponse(
+      `Internal server error: ${error.message}`,
+      500
+    );
+    res.status(500).json(response);
+  }
+};
+
+// get all users
+export const getUsers = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const users = await user.find().select("-password");
+    const response: ApiResponse<typeof users> = successResponse(
+      users,
+        "Users retrieved successfully",
+        200
+    );
+    res.status(200).json(response);
   } catch (error) {
     const response: ApiResponse<null> = errorResponse(
       "Internal server error",
       500
     );
-     res.status(500).json(response);
+    res.status(500).json(response);
   }
 };

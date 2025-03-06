@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
-const secret = process.env.SECRET || "default";
+const secret = process.env.SECRET;
 
 export interface AuthRequest extends Request {
   user?: object;
@@ -15,20 +15,24 @@ export const authMiddleWare = (
   let token = req.header("Authorization");
 
   if (!token || !token.startsWith("Bearer ")) {
-    return res.status(401).json({ message: "Unauthorized, token missing" });
+    return next(new Error("Unauthorized, token missing"));
   }
 
   try {
     token = token.split(" ")[1];
-    const decoded = jwt.verify(token, secret);
+    console.log(`Token: ${token}`);
+    console.log(`Secret: ${secret}`);
+    const decoded = jwt.verify(token, String(secret));
+    console.log(`Decoded: ${JSON.stringify(decoded)}`);
     if (typeof decoded === "object") {
       req.user = decoded;
+      return next();
     } else {
-      return res.status(401).json({ message: "Unauthorized, invalid token" });
+      return next(new Error("Unauthorized, invalid token"));
     }
-    next();
-  } catch (error) {
-    res.status(401).json({ message: "Unauthorized, invalid token" });
+  } catch (error: any) {
+    return next(new Error(`Unauthorized, invalid token: ${error.message}`));
   }
 };
+
 

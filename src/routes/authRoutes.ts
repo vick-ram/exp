@@ -1,7 +1,7 @@
 import express, { Request, Response } from "express";
 import { body } from "express-validator";
 import { authMiddleWare } from "../middlewares/authMiddleWare";
-import { register, login } from "../controllers/authController";
+import { register, login, profile, getUsers } from "../controllers/authController";
 
 const router = express.Router();
 
@@ -28,9 +28,12 @@ router.post(
   login
 );
 
-router.get("/profile", authMiddleWare, async (req: Request, res: Response) => {
-  const user = req.user;
-  return res.status(200).json({ user });
-});
+router.get(
+    "/profile",
+    authMiddleWare,
+    profile
+);
+
+router.get("/users", authMiddleWare, getUsers)
 
 export default router;
