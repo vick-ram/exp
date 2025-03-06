@@ -1,19 +1,16 @@
-import { Request, Response, NextFunction } from "express";
+import express, { Request, Response, NextFunction } from "express";
+import createError from "http-errors";
+import authRoutes from './routes/authRoutes';
+import connectDB from "./config/db";
+import path from "path";
+import cookieParser from "cookie-parser";
+import logger from "morgan";
 
-var createError = require("http-errors");
-var express = require("express");
-var path = require("path");
-var cookieParser = require("cookie-parser");
-var logger = require("morgan");
-
-var indexRouter = require("./routes/index");
-var usersRouter = require("./routes/users");
 
 var app = express();
 
-app.get("/", (req: Request, res: Response) => {
-  res.send("Hello World!");
-});
+// Initialize the database
+connectDB();
 
 app.use(logger("dev"));
 app.use(express.json());
@@ -21,13 +18,18 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
-app.use("/", indexRouter);
-app.use("/users", usersRouter);
-
 // catch 404 and forward to error handler
 app.use(function (req: Request, res: Response, next: NextFunction) {
   next(createError(404));
 });
+
+
+app.get("/", (req: Request, res: Response) => {
+  res.send("Hello World!");
+});
+
+app.use("/api/v1/auth", authRoutes);
+
 
 // error handler
 app.use(function (err: any, req: Request, res: Response, next: NextFunction) {
@@ -40,4 +42,4 @@ app.use(function (err: any, req: Request, res: Response, next: NextFunction) {
   res.render("error");
 });
 
-module.exports = app;
+export default app;

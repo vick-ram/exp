@@ -4,9 +4,9 @@
  * Module dependencies.
  */
 
-var app = require('../app');
+import http from 'http';
+import app from '../app'
 var debug = require('debug')('exp:server');
-var http = require('http');
 
 /**
  * Get port from environment and store in Express.
@@ -78,11 +78,9 @@ function onError(error: ErrorWithSyscall): void {
     case 'EACCES':
       console.error(bind + ' requires elevated privileges');
       process.exit(1);
-      break;
     case 'EADDRINUSE':
       console.error(bind + ' is already in use');
       process.exit(1);
-      break;
     default:
       throw error;
   }
@@ -96,6 +94,6 @@ function onListening() {
   var addr = server.address();
   var bind = typeof addr === 'string'
     ? 'pipe ' + addr
-    : 'port ' + addr.port;
+    : 'port ' + addr?.port;
   debug('Listening on ' + bind);
 }
