@@ -1,7 +1,13 @@
-import express, { Request, Response } from "express";
-import { body } from "express-validator";
+import express from "express";
+// import { body } from "express-validator";
 import { authMiddleWare } from "../middlewares/authMiddleWare";
-import { register, login, profile, getUsers } from "../controllers/authController";
+import {
+  register,
+  login,
+  profile,
+  getUsers,
+} from "../controllers/authController";
+const { body } = require("express-validator");
 
 const router = express.Router();
 
@@ -28,12 +34,8 @@ router.post(
   login
 );
 
-router.get(
-    "/profile",
-    authMiddleWare,
-    profile
-);
+router.get("/profile", authMiddleWare, profile);
 
-router.get("/users", authMiddleWare, getUsers)
+router.get("/users", authMiddleWare, getUsers);
 
 export default router;

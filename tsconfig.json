@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "es2016",
+    "target": "ES2018",
     "module": "commonjs",
     "moduleResolution": "node",
     "rootDir": "./src",
@@ -9,7 +9,12 @@
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
-    "skipLibCheck": true
+    "skipLibCheck": false,
+    "resolveJsonModule": true,
+    "checkJs": true,
+    "typeRoots": ["node_modules/@types"],
+    "types": ["node", "express", "express-validator"]
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules"]
 }

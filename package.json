@@ -5,9 +5,11 @@
   "scripts": {
     "start": "node dist/bin/www",
     "dev": "ts-node-dev --respawn --transpile-only src/bin/www",
-    "build": "tsc"
+    "build": "tsc",
+    "clean": "rm -rf dist"
   },
   "dependencies": {
+    "@types/express-serve-static-core": "^5.0.6",
     "bcryptjs": "^3.0.2",
     "cookie-parser": "~1.4.4",
     "debug": "~2.6.9",

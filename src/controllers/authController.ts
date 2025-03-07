@@ -1,22 +1,27 @@
 import { Response, Request } from "express";
 import bcrypt from "bcryptjs";
-import { matchedData, validationResult } from "express-validator";
 import user from "../models/user";
 import { createToken } from "../utils/jwt";
 import { successResponse, errorResponse, ApiResponse } from "../utils/response";
 import { AuthRequest } from "../middlewares/authMiddleWare";
+const {matchedData, validationResult} = require("express-validator");
 
 export const register = async (req: Request, res: Response): Promise<void> => {
   const errors = validationResult(req);
+
   if (!errors.isEmpty()) {
     res.status(400).json({ errors: errors.array() });
+    return;
   }
 
   const { name, email, password } = matchedData(req);
 
   try {
     const existingUser = await user.findOne({ email });
-    if (existingUser) res.status(400).json({ message: "User already exists" });
+    if (existingUser) {
+      res.status(400).json({ message: "User already exists" });
+      return;
+    }
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = new user({ name, email, password: hashedPassword });
@@ -46,6 +51,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     res.status(400).json({ errors: errors.array() });
+    return;
   }
 
   const { email, password } = matchedData(req);
