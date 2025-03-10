@@ -4,7 +4,7 @@ import user from "../models/user";
 import { createToken } from "../utils/jwt";
 import { successResponse, errorResponse, ApiResponse } from "../utils/response";
 import { AuthRequest } from "../middlewares/authMiddleWare";
-const {matchedData, validationResult} = require("express-validator");
+const { matchedData, validationResult } = require("express-validator");
 
 export const register = async (req: Request, res: Response): Promise<void> => {
   const errors = validationResult(req);
@@ -146,13 +146,78 @@ export const getUsers = async (req: Request, res: Response): Promise<void> => {
     const users = await user.find().select("-password");
     const response: ApiResponse<typeof users> = successResponse(
       users,
-        "Users retrieved successfully",
-        200
+      "Users retrieved successfully",
+      200
     );
     res.status(200).json(response);
   } catch (error) {
     const response: ApiResponse<null> = errorResponse(
       "Internal server error",
+      500
+    );
+    res.status(500).json(response);
+  }
+};
+
+// Update profile
+export const updateProfile = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    if (!req.user || typeof req.user !== "object") {
+      const response: ApiResponse<null> = errorResponse("user not found", 401);
+      res.status(401).json(response);
+    }
+
+    const { userId } = req.user as { userId: string };
+
+    const u = await user.findById(userId).select("-password");
+
+    if (!u) {
+      const response: ApiResponse<null> = errorResponse("user not found", 401);
+      res.status(401).json(response);
+      return;
+    }
+
+    const { name, email, phone } = matchedData(req);
+
+    u.updateOne({ name, email, phone });
+
+    await u.save();
+
+    const response: ApiResponse<typeof u> = successResponse(
+      u,
+      "User profile updated successfully",
+      200
+    );
+
+    res.status(200).json(response);
+  } catch (error: any) {
+    const response: ApiResponse<null> = errorResponse(
+      `Internal server error: ${error.message}`,
+      500
+    );
+    res.status(500).json(response);
+  }
+};
+
+// Delete user
+export const deleteUser = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    user.findByIdAndDelete(req.params.id);
+    const response: ApiResponse<null> = successResponse(
+      null,
+      "User deleted successfully",
+      200
+    );
+    res.status(200).json(response);
+  } catch (error: unknown) {
+    const response: ApiResponse<null> = errorResponse(
+      `Internal server error: ${error}`,
       500
     );
     res.status(500).json(response);

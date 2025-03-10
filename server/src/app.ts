@@ -5,14 +5,18 @@ import path from "path";
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 import express, { Request, Response, NextFunction } from "express";
+import helmet from "helmet";
 import createError from "http-errors";
 import authRoutes from './routes/authRoutes';
 import connectDB from "./config/db";
 import cookieParser from "cookie-parser";
 import logger from "morgan";
+import { errorHandler } from "./middlewares/errorHandler";
 
 
 var app = express();
+
+app.use(helmet())
 
 // Initialize the database
 connectDB();
@@ -29,6 +33,9 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 app.use("/api/v1/auth", authRoutes);
+
+// error handler
+app.use(errorHandler);
 
 // catch 404 and forward to error handler
 app.use(function (req: Request, res: Response, next: NextFunction) {

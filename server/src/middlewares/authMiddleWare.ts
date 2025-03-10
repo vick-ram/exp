@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
+import { ApiResponse } from "../utils/response";
 
 const secret = process.env.SECRET;
 
@@ -11,27 +12,44 @@ export const authMiddleWare = (
   req: AuthRequest,
   res: Response,
   next: NextFunction
-) => {
+) => { 
   let token = req.header("Authorization");
 
   if (!token || !token.startsWith("Bearer ")) {
-    return next(new Error("Unauthorized, token missing"));
+    const response: ApiResponse<null> = {
+      message: "Unauthorized, token missing",
+      status: 401,
+    }
+
+    res.status(401).json(response);
+    return;
   }
 
   try {
     token = token.split(" ")[1];
-    console.log(`Token: ${token}`);
-    console.log(`Secret: ${secret}`);
+
     const decoded = jwt.verify(token, String(secret));
-    console.log(`Decoded: ${JSON.stringify(decoded)}`);
+
     if (typeof decoded === "object") {
       req.user = decoded;
-      return next();
+      next();
     } else {
-      return next(new Error("Unauthorized, invalid token"));
+      const response: ApiResponse<null> = {
+        message: "Unauthorized, invalid token",
+        status: 401,
+      }
+
+      res.status(401).json(response);
+      return;
     }
   } catch (error: any) {
-    return next(new Error(`Unauthorized, invalid token: ${error.message}`));
+    const response: ApiResponse<null> = {
+      message: `Unauthorized, invalid token: ${error.message}`,
+      status: 401,
+    }
+
+    res.status(401).json(response);
+    return;
   }
 };
 
